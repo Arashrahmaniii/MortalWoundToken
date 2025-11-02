@@ -1,66 +1,55 @@
-## Foundry
+# Mortal Wound Token (MWND)
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+> A secure, pausable, and vesting-enabled ERC20 token built with Solidity and OpenZeppelin v5, powered by Foundry.
 
-Foundry consists of:
+---
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Overview
 
-## Documentation
+**Mortal Wound (MWND)** is an ERC20 token with advanced features designed for long-term, secure token distribution.  
+It includes minting, burning, pausing, and a **linear vesting system** to manage time-based token releases for team members or investors.
 
-https://book.getfoundry.sh/
+### 🔹 Key Features
+- ERC20-compliant (OpenZeppelin v5)
+-Role-based access control (`AccessControl`)
+-Mintable & Burnable
+-Pausable transfers for emergency stops
+-Linear Vesting with cliff, duration, and revocable grants
+-Reentrancy protected
+-Fully tested with Foundry
 
-## Usage
+---
 
-### Build
+## Project Structure
 
-```shell
-$ forge build
-```
 
-### Test
+├── foundry.toml
+├── src/
+│ ├── MortalWoundToken.sol # Main ERC20 token contract
+│ └── TokenVesting.sol # Linear vesting contract
+├── test/
+│ └── MortalWoundTokenAndVesting.t.sol # Unit tests for token and vesting
+└── script/
+└── DeployMWND.s.sol # Deployment script
 
-```shell
-$ forge test
-```
+---
 
-### Format
+## Installation
 
-```shell
-$ forge fmt
-```
+Make sure you have **Foundry** installed:
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 
-### Gas Snapshots
+Clone this repository and install dependencies:
 
-```shell
-$ forge snapshot
-```
+git clone https://github.com/Arashrahmaniii/MortalWoundToken.git
+cd MortalWoundToken
+forge install OpenZeppelin/openzeppelin-contracts
 
-### Anvil
 
-```shell
-$ anvil
-```
+This project is licensed under the MIT License.
+You’re free to use, modify, and distribute it with attribution
 
-### Deploy
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Author : Arash Rahmani

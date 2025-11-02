@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title TokenVesting - linear vesting per-beneficiary with optional revocation
-import "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-contracts/access/Ownable.sol";
-import "openzeppelin-contracts/security/ReentrancyGuard.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 
-contract TokenVesting is Ownable, ReentrancyGuard {
+contract TokenVesting is Ownable(msg.sender), ReentrancyGuard {
     IERC20 public immutable token;
 
     struct Grant {
-        uint256 total;    // total tokens assigned
+        uint256 total; // total tokens assigned
         uint256 released; // already released
-        uint256 start;    // vesting start timestamp
-        uint256 cliff;    // cliff timestamp
+        uint256 start; // vesting start timestamp
+        uint256 cliff; // cliff timestamp
         uint256 duration; // duration in seconds
-        bool revocable;   // whether owner can revoke
-        bool revoked;     // whether revoked
+        bool revocable; // whether owner can revoke
+        bool revoked; // whether revoked
     }
 
     mapping(address => Grant) public grants;
 
-    event GrantAdded(address indexed beneficiary, uint256 total, uint256 start, uint256 cliff, uint256 duration, bool revocable);
+    event GrantAdded(
+        address indexed beneficiary, uint256 total, uint256 start, uint256 cliff, uint256 duration, bool revocable
+    );
     event Released(address indexed beneficiary, uint256 amount);
     event Revoked(address indexed beneficiary, uint256 unreleased);
 
@@ -102,7 +103,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         require(g.revocable, "not-revocable");
         require(!g.revoked, "already-revoked");
 
-        uint256 vested = _vestedAmount(g);
+        // uint256 vested = _vestedAmount(g);
         uint256 unreleased = g.total > g.released ? g.total - g.released : 0;
         // Mark revoked before transfer to avoid reentrancy issues on custom tokens
         g.revoked = true;

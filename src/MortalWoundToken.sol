@@ -1,11 +1,11 @@
+/// @title MortalWoundToken (MWND) - ERC20 with AccessControl, Pausable, Burnable, Mintable
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @title MortalWoundToken (MWND) - ERC20 with AccessControl, Pausable, Burnable, Mintable
-import {ERC20} from "@openzeppelin/token/ERC20/ERC20.sol";
-import {ERC20Burnable} from "@openzeppelin/token/ERC20/extensions/ERC20Burnable.sol";
-import {Pausable} from "@openzeppelin/utils/Pausable.sol";
-import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "openzeppelin-contracts/contracts/utils/Pausable.sol";
+import "openzeppelin-contracts/contracts/access/AccessControl.sol";
 
 contract MortalWoundToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -18,8 +18,24 @@ contract MortalWoundToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         _grantRole(PAUSER_ROLE, admin);
     }
 
-    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) whenNotPaused {
         _mint(to, amount);
+    }
+
+    function burn(uint256 amount) public override whenNotPaused {
+        super.burn(amount);
+    }
+
+    function burnFrom(address account, uint256 amount) public override whenNotPaused {
+        super.burnFrom(account, amount);
+    }
+
+    function transfer(address to, uint256 amount) public override whenNotPaused returns (bool) {
+        return super.transfer(to, amount);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public override whenNotPaused returns (bool) {
+        return super.transferFrom(from, to, amount);
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
@@ -30,20 +46,7 @@ contract MortalWoundToken is ERC20, ERC20Burnable, Pausable, AccessControl {
         _unpause();
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal
-        override
-    {
-        super._beforeTokenTransfer(from, to, amount);
-        require(!paused(), "token-paused");
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(AccessControl)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
