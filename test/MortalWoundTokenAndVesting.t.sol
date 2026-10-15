@@ -14,6 +14,10 @@ contract MortalWoundFullTest is Test {
 
     uint256 constant INITIAL_SUPPLY = 10_000 ether; // initial supply to mint to vesting
 
+    // Fixed vesting start. Don't use `uint256 start = block.timestamp` with vm.warp under
+    // via_ir: the compiler may re-read TIMESTAMP after the warp instead of the cached value.
+    uint256 constant START = 1_000_000;
+
     function setUp() public {
         // Deploy token with admin as the role holder
         token = new MortalWoundToken(admin);
@@ -30,6 +34,8 @@ contract MortalWoundFullTest is Test {
         // Use vm.prank to simulate admin calling transferOwnership.
         vm.prank(address(this));
         vest.transferOwnership(admin);
+
+        vm.warp(START);
     }
 
     function testTokenBasics() public {
@@ -49,7 +55,7 @@ contract MortalWoundFullTest is Test {
 
     function testAddGrantAndReleasable() public {
         // admin will add a grant for alice
-        uint256 start = block.timestamp;
+        uint256 start = START;
         uint256 cliff = start + 100;
         uint256 duration = 1000;
         vm.prank(admin);
@@ -61,13 +67,13 @@ contract MortalWoundFullTest is Test {
 
         // after cliff and halfway
         vm.warp(start + 500);
-        uint256 expected = (1000 ether * (550)) / duration; // linear
+        uint256 expected = (1000 ether * 500) / duration; // linear
         assertEq(vest.releasableAmount(alice), expected);
     }
 
     function testReleaseFlow() public {
         // prepare grant
-        uint256 start = block.timestamp;
+        uint256 start = START;
         uint256 cliff = start;
         uint256 duration = 1000;
         vm.prank(admin);
@@ -88,32 +94,25 @@ contract MortalWoundFullTest is Test {
         assertEq(token.balanceOf(alice), 1000 ether);
     }
 
-    function testRevokeGrantReturnsUnreleasedToAdmin() public {
+    function testRevokePaysVestedAndRefundsOnlyUnvested() public {
         // add a revocable grant
-        uint256 start = block.timestamp;
+        uint256 start = START;
         uint256 cliff = start;
         uint256 duration = 1000;
         vm.prank(admin);
         vest.addGrant(alice, 1000 ether, start, cliff, duration, true);
 
-        // warp half, then revoke
+        // warp half, then revoke: alice keeps the vested half, admin gets the unvested half
         vm.warp(start + 500);
-
-        // compute unreleased (should be 500)
-        (uint256 total, uint256 released,,,,,) = vest.grants(alice);
-        uint256 unreleased = total - released;
-        assertEq(unreleased, 1000 ether - 0);
-
         vm.prank(admin);
         vest.revoke(alice);
+
+        assertEq(token.balanceOf(alice), 500 ether);
+        assertEq(token.balanceOf(admin), 500 ether);
 
         // after revoke, alice can't release
         vm.prank(alice);
         vm.expectRevert("revoked");
         vest.release();
-
-        // admin should receive remaining tokens (note: admin didn't have initial supply)
-        // Balance of admin increased by unreleased (1000 ether) since alice had released nothing
-        assertEq(token.balanceOf(admin), unreleased);
     }
 }
